@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>PTZ Controller</title>
     <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="mapping.css" />
   </head>
   <body>
     <main class="app-shell">
@@ -50,21 +51,33 @@
             </section>
 
             <section class="panel presets-panel">
-              <div class="panel-heading"><div><h2>Presets</h2><p>Recall a saved camera position</p></div><button class="text-button">Manage</button></div>
+              <div class="panel-heading"><div><h2>Presets</h2><p>Recall a saved camera position</p></div><button class="text-button" data-action="Open preset manager">Manage</button></div>
               <div class="preset-grid">
-                <button class="preset active"><span>1</span><strong>Pulpit</strong></button>
-                <button class="preset"><span>2</span><strong>Piano</strong></button>
-                <button class="preset"><span>3</span><strong>Worship Team</strong></button>
-                <button class="preset"><span>4</span><strong>Wide Stage</strong></button>
-                <button class="preset"><span>5</span><strong>Audience</strong></button>
+                <button class="preset active"><span>1 <em>Button 1</em></span><strong>Pulpit</strong></button>
+                <button class="preset"><span>2 <em>Button 2</em></span><strong>Piano</strong></button>
+                <button class="preset"><span>3 <em>Button 3</em></span><strong>Worship Team</strong></button>
+                <button class="preset"><span>4 <em>Button 4</em></span><strong>Wide Stage</strong></button>
+                <button class="preset"><span>5 <em>Button 5</em></span><strong>Audience</strong></button>
                 <button class="preset add"><span>＋</span><strong>Add preset</strong></button>
               </div>
+              <p class="preset-note">Preset buttons are configurable in the joystick mapping panel.</p>
             </section>
 
             <section class="panel joystick-panel">
               <div class="panel-heading"><div><h2>Joystick monitor</h2><p>Live input preview</p></div><span class="status-text"><i></i> Active</span></div>
               <div class="axis-grid"><div><small>PAN X</small><strong id="axisX">+0.00</strong><div class="bar"><i id="barX"></i></div></div><div><small>TILT Y</small><strong id="axisY">+0.00</strong><div class="bar"><i id="barY"></i></div></div><div><small>TWIST / ZOOM</small><strong id="axisZ">+0.00</strong><div class="bar"><i id="barZ"></i></div></div><div><small>THROTTLE</small><strong id="axisT">62%</strong><div class="bar"><i id="barT"></i></div></div></div>
               <p class="hint">Demo mode is simulating joystick input. Hardware is not connected yet.</p>
+            </section>
+
+            <section class="panel mapping-panel">
+              <div class="panel-heading"><div><h2>Joystick button mapping</h2><p>Choose what each physical button does</p></div><button class="text-button" data-action="Open full mapping">Edit all</button></div>
+              <div class="mapping-list">
+                <div class="mapping-row"><span class="binding">Button 1</span><span class="mapping-arrow">→</span><strong>Preset 1 · Pulpit</strong><button class="edit-binding" data-binding="Button 1">Change</button></div>
+                <div class="mapping-row"><span class="binding">Button 2</span><span class="mapping-arrow">→</span><strong>Preset 2 · Piano</strong><button class="edit-binding" data-binding="Button 2">Change</button></div>
+                <div class="mapping-row"><span class="binding">Button 6</span><span class="mapping-arrow">→</span><strong>One-push auto focus</strong><button class="edit-binding" data-binding="Button 6">Change</button></div>
+                <div class="mapping-row"><span class="binding">Hat switch</span><span class="mapping-arrow">→</span><strong>Fine movement mode</strong><button class="edit-binding" data-binding="Hat switch">Change</button></div>
+              </div>
+              <button class="learn-button" data-action="Learn a new button">＋ Learn a button assignment</button>
             </section>
           </div>
         </section>

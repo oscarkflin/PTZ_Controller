@@ -46,7 +46,8 @@ Tauri interface: configuration, debug values, manual controls, presets
 
 - Send Stop on disconnect, stale input, loss of connection, and application shutdown.
 - Add preset recall and a deliberate preset-store flow.
-- Persist camera, joystick, and mapping profiles locally.
+- Add a configurable “learn button” mapping flow: press a physical button, then choose its action.
+- Persist camera, joystick, preset, and mapping profiles locally.
 - Add reconnect behavior and clear connection status.
 
 ## Milestone 5: Distribution

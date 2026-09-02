@@ -1,6 +1,7 @@
 const toast = document.querySelector('#toast');
 const show = message => { toast.textContent = message; toast.classList.add('show'); clearTimeout(window.toastTimer); window.toastTimer = setTimeout(() => toast.classList.remove('show'), 2100); };
 document.querySelectorAll('[data-action]').forEach(button => button.addEventListener('click', () => show(`${button.dataset.action} — demo only`)));
+document.querySelectorAll('.edit-binding').forEach(button => button.addEventListener('click', () => show(`Choose a new action for ${button.dataset.binding} — demo only`)));
 document.querySelector('#emergencyStop').addEventListener('click', () => show('STOP ALL — demo only'));
 document.querySelector('#speed').addEventListener('input', event => document.querySelector('#speedValue').textContent = event.target.value);
 document.querySelectorAll('.preset:not(.add)').forEach(button => button.addEventListener('click', () => { document.querySelectorAll('.preset').forEach(item => item.classList.remove('active')); button.classList.add('active'); show(`Preset recalled: ${button.querySelector('strong').textContent} — demo only`); }));
