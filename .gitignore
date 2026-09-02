@@ -1,0 +1,20 @@
+# Tauri / Rust build output
+src-tauri/target/
+target/
+
+# JavaScript dependencies and build output
+node_modules/
+dist/
+
+# Tauri-generated signing keys and local configuration
+*.key
+*.key.pub
+.env
+.env.*
+!.env.example
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
