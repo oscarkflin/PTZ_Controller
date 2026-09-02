@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PTZ Controller</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="topbar">
+        <div class="brand"><span class="brand-mark">◉</span><span>PTZ Controller</span></div>
+        <div class="top-status"><span class="status-dot"></span> Camera connected <span class="divider"></span><span class="subtle">Sony SRG-300SE</span></div>
+        <button class="icon-button" aria-label="Settings">⚙</button>
+      </header>
+
+      <section class="workspace">
+        <aside class="sidebar">
+          <p class="eyebrow">CAMERA</p>
+          <label>Camera name<input value="Sanctuary Camera" /></label>
+          <label>IP address<input value="192.168.1.120" /></label>
+          <label>VISCA UDP port<input value="52381" /></label>
+          <button class="outline-button">Reconnect</button>
+          <div class="connection-card"><span class="status-dot"></span><div><strong>Online</strong><small>12 ms response time</small></div></div>
+
+          <p class="eyebrow spacing">JOYSTICK</p>
+          <div class="joystick-card"><div class="joystick-icon">✦</div><div><strong>T.16000M FCS</strong><small>USB connected</small></div><button class="dots">•••</button></div>
+          <button class="outline-button">Open calibration</button>
+        </aside>
+
+        <section class="controller">
+          <div class="page-heading"><div><p class="eyebrow">LIVE CONTROL</p><h1>Sanctuary Camera</h1></div><button class="stop-button" id="emergencyStop">■ STOP ALL</button></div>
+          <div class="content-grid">
+            <section class="panel movement-panel">
+              <div class="panel-heading"><div><h2>Pan &amp; Tilt</h2><p>Use joystick or on-screen controls</p></div><span class="pill">Speed <b id="speedValue">6</b>/24</span></div>
+              <div class="ptz-pad" aria-label="Pan and tilt controls">
+                <button class="up" data-action="Tilt up">↑</button>
+                <button class="left" data-action="Pan left">←</button>
+                <button class="center" data-action="Stop movement">●</button>
+                <button class="right" data-action="Pan right">→</button>
+                <button class="down" data-action="Tilt down">↓</button>
+              </div>
+              <div class="speed-control"><span>Slow</span><input id="speed" type="range" min="1" max="24" value="6" /><span>Fast</span></div>
+            </section>
+
+            <section class="panel zoom-panel">
+              <div class="panel-heading"><div><h2>Zoom</h2><p>Twist axis: ready</p></div><span class="pill">Optical</span></div>
+              <div class="zoom-controls"><button data-action="Zoom out">−</button><div class="zoom-meter"><div class="zoom-level" id="zoomLevel"></div><span id="zoomLabel">42×</span></div><button data-action="Zoom in">+</button></div>
+              <button class="soft-button" data-action="Zoom stop">Stop zoom</button>
+            </section>
+
+            <section class="panel presets-panel">
+              <div class="panel-heading"><div><h2>Presets</h2><p>Recall a saved camera position</p></div><button class="text-button">Manage</button></div>
+              <div class="preset-grid">
+                <button class="preset active"><span>1</span><strong>Pulpit</strong></button>
+                <button class="preset"><span>2</span><strong>Piano</strong></button>
+                <button class="preset"><span>3</span><strong>Worship Team</strong></button>
+                <button class="preset"><span>4</span><strong>Wide Stage</strong></button>
+                <button class="preset"><span>5</span><strong>Audience</strong></button>
+                <button class="preset add"><span>＋</span><strong>Add preset</strong></button>
+              </div>
+            </section>
+
+            <section class="panel joystick-panel">
+              <div class="panel-heading"><div><h2>Joystick monitor</h2><p>Live input preview</p></div><span class="status-text"><i></i> Active</span></div>
+              <div class="axis-grid"><div><small>PAN X</small><strong id="axisX">+0.00</strong><div class="bar"><i id="barX"></i></div></div><div><small>TILT Y</small><strong id="axisY">+0.00</strong><div class="bar"><i id="barY"></i></div></div><div><small>TWIST / ZOOM</small><strong id="axisZ">+0.00</strong><div class="bar"><i id="barZ"></i></div></div><div><small>THROTTLE</small><strong id="axisT">62%</strong><div class="bar"><i id="barT"></i></div></div></div>
+              <p class="hint">Demo mode is simulating joystick input. Hardware is not connected yet.</p>
+            </section>
+          </div>
+        </section>
+      </section>
+      <footer id="toast">Ready — no command sent (demo mode).</footer>
+    </main>
+    <script src="app.js"></script>
+  </body>
+</html>
