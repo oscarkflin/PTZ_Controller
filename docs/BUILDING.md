@@ -8,7 +8,7 @@ It starts in **demo mode**. Commands are only sent after you enable **Send live 
 
 ## Windows: run from source
 
-1. Install Python 3.11 or later from <https://www.python.org/downloads/>.
+1. Install **Python 3.11 or later** from <https://www.python.org/downloads/>. Python 3.11 is the tested version for this MVP.
 2. Clone the repository and open PowerShell in the project folder.
 3. Create and activate a local virtual environment:
 
@@ -33,7 +33,7 @@ It starts in **demo mode**. Commands are only sent after you enable **Send live 
 
 ## macOS: run from source
 
-1. Install Python 3.11 or later. Python from <https://www.python.org/downloads/> is recommended for the first test.
+1. Install **Python 3.11 or later**. Python 3.11 is the tested version for this MVP; Python from <https://www.python.org/downloads/> is recommended for the first test.
 2. Open Terminal and clone the project:
 
    ```bash
@@ -57,6 +57,16 @@ It starts in **demo mode**. Commands are only sent after you enable **Send live 
    ```
 
 The PTZ Controller window should open. Connect the camera and USB joystick only after it is visible.
+
+## Edit preset buttons
+
+In the application, select **Manage presets…**. You can:
+
+- Add a local button for any Sony preset number from `0` through `15`
+- Rename an existing button (for example, `Pulpit` to `Main lectern`)
+- Remove a local label/button
+
+Removing a preset from this screen does not erase it from the Sony camera. Storing a camera position is a separate **Store current position…** action and requires confirmation.
 
 ## First camera test
 
@@ -86,3 +96,16 @@ Build on the target operating system:
 PyInstaller places output in `dist/PTZController/`. A macOS `.dmg` can be created from the generated `.app` later, after real hardware testing and code signing are complete.
 
 Do not distribute unsigned Mac builds broadly; macOS may block or warn about them. See [RELEASING.md](RELEASING.md) for the signing/release plan.
+
+## Save changes and push to GitHub
+
+Run these commands from the repository root after editing source or documentation:
+
+```bash
+git status
+git add .
+git commit -m "Describe the change"
+git push
+```
+
+The repository remote is `https://github.com/oscarkflin/PTZ_Controller.git`. The first push from a computer may require GitHub authentication through Git Credential Manager.

@@ -11,6 +11,7 @@ The Python controller now includes:
 - Camera IP and UDP port configuration (`52381` default)
 - Guarded **live command** mode, off by default
 - Manual Pan, Tilt, Zoom, and Stop controls
+- Editable preset labels: add, rename, or remove local preset buttons
 - Preset recall buttons and confirmation-protected preset storage
 - USB joystick scanning and live axis monitor
 - Configurable dead zone and throttle-based movement speed
@@ -33,6 +34,21 @@ Activate the environment, install dependencies, then start the app:
 python -m pip install -r requirements.txt
 python app.py
 ```
+
+Use **Manage presets…** in the app to add, rename, or remove local buttons. Removing a label does **not** delete the camera's stored position; it only removes that button from this app. The labels are saved locally in `~/.ptz_controller/presets.json`.
+
+## Save work to GitHub
+
+After making changes, run these commands from the project folder:
+
+```bash
+git status
+git add .
+git commit -m "Describe the change"
+git push
+```
+
+The first `git push` on a new computer may open a GitHub sign-in prompt. Complete it before retrying the command.
 
 ## Church setup
 

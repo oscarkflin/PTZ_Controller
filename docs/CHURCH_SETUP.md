@@ -54,6 +54,8 @@ Testing manual controls first separates network/camera problems from joystick-ma
 4. Start with a low throttle speed cap.
 5. Assign actions in the button-mapping screen.
 
+Use **Manage presets…** to tailor the displayed preset names to the church. Removing a label in the app does not delete its stored camera position.
+
 Suggested first mapping:
 
 | Physical control | Action |

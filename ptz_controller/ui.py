@@ -6,6 +6,7 @@ import tkinter as tk
 from tkinter import messagebox, simpledialog, ttk
 
 from .joystick import JoystickReader
+from .presets import PresetStore
 from .visca import ViscaClient
 
 
@@ -17,6 +18,8 @@ class PTZControllerApp:
         self.root.minsize(760, 560)
         self.client: ViscaClient | None = None
         self.reader = JoystickReader()
+        self.preset_store = PresetStore()
+        self.presets = self.preset_store.load()
         self.joystick_enabled = tk.BooleanVar(value=False)
         self.live_enabled = tk.BooleanVar(value=False)
         self.dead_zone = tk.DoubleVar(value=0.08)
@@ -74,11 +77,9 @@ class PTZControllerApp:
         ttk.Checkbutton(joystick, text="Enable joystick camera control", variable=self.joystick_enabled, command=self.toggle_joystick).grid(row=6, column=0, columnspan=4, sticky="w", pady=(14, 0))
         ttk.Label(joystick, text="Joystick control remains disabled until manually enabled.").grid(row=7, column=0, columnspan=4, sticky="w", pady=(5, 0))
 
-        presets = ttk.LabelFrame(shell, text="Presets", padding=12)
-        presets.grid(row=3, column=0, columnspan=4, sticky="ew", pady=(10, 0))
-        for preset, name in enumerate(("Pulpit", "Piano", "Worship team", "Wide stage", "Audience"), start=1):
-            ttk.Button(presets, text=f"{preset}  {name}", command=lambda value=preset: self.recall(value)).grid(row=0, column=preset - 1, padx=4)
-        ttk.Button(presets, text="Store current position…", command=self.store_preset).grid(row=1, column=0, columnspan=5, pady=(12, 0))
+        self.presets_frame = ttk.LabelFrame(shell, text="Presets", padding=12)
+        self.presets_frame.grid(row=3, column=0, columnspan=4, sticky="ew", pady=(10, 0))
+        self.render_presets()
 
         shell.columnconfigure(0, weight=1)
         shell.columnconfigure(1, weight=1)
@@ -122,6 +123,96 @@ class PTZControllerApp:
     def recall(self, preset: int) -> None:
         self._client().recall_preset(preset)
         self.status.set(f"{'LIVE' if self.live_enabled.get() else 'Demo'}: preset {preset}")
+
+    def render_presets(self) -> None:
+        for child in self.presets_frame.winfo_children():
+            child.destroy()
+        for index, preset in enumerate(self.presets):
+            row, column = divmod(index, 3)
+            ttk.Button(
+                self.presets_frame,
+                text=f"{preset['number']}  {preset['name']}",
+                command=lambda value=int(preset["number"]): self.recall(value),
+            ).grid(row=row, column=column, padx=4, pady=3, sticky="ew")
+            self.presets_frame.columnconfigure(column, weight=1)
+        controls_row = (len(self.presets) + 2) // 3
+        ttk.Button(self.presets_frame, text="Manage presets…", command=self.open_preset_manager).grid(row=controls_row, column=0, padx=4, pady=(12, 0), sticky="ew")
+        ttk.Button(self.presets_frame, text="Store current position…", command=self.store_preset).grid(row=controls_row, column=1, columnspan=2, padx=4, pady=(12, 0), sticky="ew")
+
+    def open_preset_manager(self) -> None:
+        window = tk.Toplevel(self.root)
+        window.title("Manage presets")
+        window.resizable(False, False)
+        frame = ttk.Frame(window, padding=16)
+        frame.pack(fill="both", expand=True)
+        ttk.Label(frame, text="Preset names are saved on this computer.").grid(row=0, column=0, columnspan=3, sticky="w", pady=(0, 8))
+        listing = tk.Listbox(frame, width=38, height=9)
+        listing.grid(row=1, column=0, columnspan=3, sticky="ew")
+        number = tk.StringVar()
+        name = tk.StringVar()
+
+        def refresh(select_number: int | None = None) -> None:
+            listing.delete(0, tk.END)
+            for item in self.presets:
+                listing.insert(tk.END, f"{item['number']:>2}  {item['name']}")
+            if select_number is not None:
+                for index, item in enumerate(self.presets):
+                    if item["number"] == select_number:
+                        listing.selection_set(index)
+                        listing.activate(index)
+                        break
+
+        def select(_event=None) -> None:
+            if not listing.curselection():
+                return
+            item = self.presets[listing.curselection()[0]]
+            number.set(str(item["number"]))
+            name.set(str(item["name"]))
+
+        def save() -> None:
+            try:
+                value = int(number.get())
+            except ValueError:
+                messagebox.showerror("Invalid preset", "Preset number must be between 0 and 15.", parent=window)
+                return
+            label = name.get().strip()
+            selected = listing.curselection()
+            if not 0 <= value <= 15 or not label:
+                messagebox.showerror("Invalid preset", "Enter a preset number from 0 to 15 and a name.", parent=window)
+                return
+            old_number = self.presets[selected[0]]["number"] if selected else None
+            if any(item["number"] == value and item["number"] != old_number for item in self.presets):
+                messagebox.showerror("Preset already used", f"Preset {value} already has a name. Select it to rename it, or choose another number.", parent=window)
+                return
+            if selected:
+                self.presets[selected[0]] = {"number": value, "name": label}
+            else:
+                self.presets.append({"number": value, "name": label})
+            self.presets.sort(key=lambda item: int(item["number"]))
+            self.preset_store.save(self.presets)
+            self.render_presets()
+            refresh(value)
+
+        def remove() -> None:
+            if not listing.curselection():
+                return
+            item = self.presets[listing.curselection()[0]]
+            if messagebox.askyesno("Remove preset label", f"Remove the local label for preset {item['number']} ({item['name']})? This does not erase the camera position.", parent=window):
+                self.presets.pop(listing.curselection()[0])
+                self.preset_store.save(self.presets)
+                self.render_presets()
+                refresh()
+                number.set("")
+                name.set("")
+
+        listing.bind("<<ListboxSelect>>", select)
+        ttk.Label(frame, text="Preset number").grid(row=2, column=0, sticky="w", pady=(12, 0))
+        ttk.Entry(frame, textvariable=number, width=8).grid(row=3, column=0, sticky="w")
+        ttk.Label(frame, text="Display name").grid(row=2, column=1, sticky="w", pady=(12, 0))
+        ttk.Entry(frame, textvariable=name, width=24).grid(row=3, column=1, sticky="ew", padx=(6, 0))
+        ttk.Button(frame, text="Add / save", command=save).grid(row=3, column=2, padx=(8, 0))
+        ttk.Button(frame, text="Remove selected", command=remove).grid(row=4, column=0, columnspan=3, pady=(12, 0), sticky="ew")
+        refresh()
 
     def store_preset(self) -> None:
         preset = simpledialog.askinteger("Store preset", "Preset number to overwrite (0–15):", parent=self.root, minvalue=0, maxvalue=15)
