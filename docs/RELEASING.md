@@ -2,11 +2,11 @@
 
 ## Current state
 
-Do not create releases yet. The repository currently contains a browser-based UI prototype, not a Tauri application or production camera-control implementation.
+Do not create releases yet. The repository contains a Python MVP that still needs physical camera and joystick verification.
 
 ## Planned release workflow
 
-After the Tauri app is scaffolded and tested, the project will use GitHub Actions to:
+After the Python MVP is tested, the project will use GitHub Actions to:
 
 1. Run checks on pull requests.
 2. Build a Windows installer and a macOS disk image when a version tag is pushed.

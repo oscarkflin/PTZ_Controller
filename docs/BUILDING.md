@@ -1,138 +1,88 @@
-# Building PTZ Controller
+# Build and Run Guide
 
-## Current status
+## What this builds today
 
-The repository currently contains a browser-based UI prototype. It can be previewed on Windows or macOS, but it is not yet a Tauri application and cannot produce a working `.dmg` or `.exe`.
+The first PTZ Controller is a Python desktop app. You can run it directly on Windows or macOS; no Rust, Node.js, or Tauri setup is needed.
 
-This guide records the exact workflow to use once the real Tauri application has been added to the repository.
+It starts in **demo mode**. Commands are only sent after you enable **Send live camera commands** inside the application.
 
-## 1. Preview the current UI prototype
+## Windows: run from source
 
-The prototype needs only a modern web browser.
+1. Install Python 3.11 or later from <https://www.python.org/downloads/>.
+2. Clone the repository and open PowerShell in the project folder.
+3. Create and activate a local virtual environment:
 
-1. Clone the repository.
-2. Open `ui-prototype/index.html` in a browser.
-
-Or, in the `ui-prototype` directory, run a local static server:
-
-```powershell
-python -m http.server 4173
-```
-
-Then browse to <http://127.0.0.1:4173>.
-
-The prototype uses simulated joystick values and never sends camera commands.
-
-## 2. Windows development setup
-
-Use Windows to develop and review the interface, mock camera behavior, Rust mapping logic, and the Windows installer.
-
-Install:
-
-1. **Node.js LTS**
-2. **Rust stable MSVC toolchain**
-3. **Microsoft C++ Build Tools** with **Desktop development with C++** selected
-4. Microsoft Edge WebView2 (normally already present on current Windows)
-
-After the Tauri application is scaffolded, from the repository root run:
-
-```powershell
-npm install
-npm run tauri dev
-```
-
-This starts a desktop development window with live reload.
-
-To create a Windows installer:
-
-```powershell
-npm run tauri build
-```
-
-The generated installer will be in the Tauri `target/release/bundle` directory.
-
-## 3. macOS development and `.dmg` build
-
-Use a Mac to test the real T.16000M joystick and Sony camera. A Mac is also required for local macOS code signing and notarization.
-
-Install on the Mac:
-
-1. Xcode Command Line Tools:
-
-   ```bash
-   xcode-select --install
+   ```powershell
+   python -m venv .venv
+   .\.venv\Scripts\Activate.ps1
    ```
 
-2. Node.js LTS
-3. Rust stable toolchain
-4. Clone the repository:
+4. Install joystick support and run the app:
+
+   ```powershell
+   python -m pip install --upgrade pip
+   python -m pip install -r requirements.txt
+   python app.py
+   ```
+
+5. Run the protocol tests at any time:
+
+   ```powershell
+   python -m unittest discover -s tests -v
+   ```
+
+## macOS: run from source
+
+1. Install Python 3.11 or later. Python from <https://www.python.org/downloads/> is recommended for the first test.
+2. Open Terminal and clone the project:
 
    ```bash
    git clone https://github.com/oscarkflin/PTZ_Controller.git
    cd PTZ_Controller
    ```
 
-After the Tauri application is scaffolded:
+3. Create and activate a local virtual environment:
+
+   ```bash
+   python3 -m venv .venv
+   source .venv/bin/activate
+   ```
+
+4. Install joystick support and run the app:
+
+   ```bash
+   python -m pip install --upgrade pip
+   python -m pip install -r requirements.txt
+   python app.py
+   ```
+
+The PTZ Controller window should open. Connect the camera and USB joystick only after it is visible.
+
+## First camera test
+
+1. Connect the Mac and Sony camera to the same Ethernet network.
+2. Enter the Sony camera's IP address and configured UDP VISCA port (`52381` is the default).
+3. Leave **Send live camera commands** off and press **Connect**.
+4. Turn on live mode only after confirming the IP is correct.
+5. Set a low speed, test one movement, then press **STOP**.
+6. Verify manual Pan/Tilt/Zoom works before scanning or enabling the joystick.
+
+See [CHURCH_SETUP.md](CHURCH_SETUP.md) for the full field checklist.
+
+## Package an executable later
+
+For a simple test executable, install PyInstaller inside the same virtual environment:
 
 ```bash
-npm install
-npm run tauri dev
+python -m pip install pyinstaller
+pyinstaller --noconfirm --windowed --name PTZController app.py
 ```
 
-Connect the USB joystick and Sony camera only after the app opens. Verify on-screen VISCA controls before enabling joystick mappings.
+Build on the target operating system:
 
-To make a Mac disk image:
+- Build the Windows `.exe` on Windows.
+- Build the macOS `.app` on macOS.
 
-```bash
-npm run tauri build -- --bundles dmg
-```
+PyInstaller places output in `dist/PTZController/`. A macOS `.dmg` can be created from the generated `.app` later, after real hardware testing and code signing are complete.
 
-The `.dmg` will be generated in the Tauri `target/release/bundle/dmg` directory. It can be opened and installed by dragging the app to Applications.
-
-## 4. Signing and notarization for a shareable Mac build
-
-An unsigned test build may trigger a macOS security warning. Before giving the application to other operators, use an Apple Developer account to:
-
-1. Create a **Developer ID Application** signing certificate.
-2. Configure the certificate in the Mac Keychain or securely in GitHub Actions secrets.
-3. Provide Apple notarization credentials.
-4. Build and notarize the `.dmg`.
-
-Never commit certificates, private keys, Apple passwords, or API keys to Git.
-
-## 5. Build releases on GitHub
-
-GitHub Actions can build the Windows installer and Mac `.dmg` without manually building on both machines. The workflow will be added after the Tauri app is scaffolded and has a successful local build.
-
-The intended release process:
-
-```text
-Finish and test a version
-        ↓
-Create and push a version tag, for example v0.1.0
-        ↓
-GitHub Actions builds Windows + macOS installers
-        ↓
-Review the generated GitHub Release draft
-        ↓
-Publish the release
-```
-
-Example tag commands:
-
-```bash
-git tag v0.1.0
-git push origin v0.1.0
-```
-
-After publication, operators download the appropriate asset from the repository's **Releases** page.
-
-## Build safety checklist
-
-Before calling any installer a release candidate:
-
-- Test Pan, Tilt, Zoom, and Stop against the physical SRG-300SE.
-- Test joystick center/dead-zone behavior and joystick disconnection.
-- Test every configured preset recall.
-- Verify the macOS installer on a Mac other than the build machine when possible.
-- Confirm no camera passwords, private keys, or local network details were committed.
+Do not distribute unsigned Mac builds broadly; macOS may block or warn about them. See [RELEASING.md](RELEASING.md) for the signing/release plan.

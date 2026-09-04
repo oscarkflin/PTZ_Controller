@@ -2,7 +2,7 @@
 
 ## Goal
 
-Create a standalone, local PTZ controller that maps a Thrustmaster T.16000M FCS joystick to a Sony SRG-300SE camera using VISCA over IP.
+Create a standalone, local Python PTZ controller that maps a Thrustmaster T.16000M FCS joystick to a Sony SRG-300SE camera using VISCA over IP.
 
 ## Architecture
 
@@ -10,7 +10,7 @@ Create a standalone, local PTZ controller that maps a Thrustmaster T.16000M FCS 
 T.16000M USB joystick
         |
         v
-Rust HID service -> normalized JoystickState -> mapping engine -> PTZIntent
+Python joystick service -> normalized JoystickState -> mapping engine -> PTZIntent
                                                                |
                                                                v
                                                     VISCA UDP client
@@ -21,12 +21,11 @@ Rust HID service -> normalized JoystickState -> mapping engine -> PTZIntent
 Tauri interface: configuration, debug values, manual controls, presets
 ```
 
-## Milestone 1: Windows UI prototype
+## Milestone 1: Python MVP
 
-- Scaffold a Tauri 2 app with Vanilla TypeScript.
-- Build the main controller layout, connection controls, camera test pad, joystick monitor, and presets.
-- Add simulated camera state and simulated joystick input.
-- Verify the interface without camera hardware.
+- Build a Python Tkinter desktop window with connection controls, camera test pad, joystick monitor, and presets.
+- Add guarded demo/live mode and VISCA packet tests.
+- Verify the UI without camera hardware.
 
 ## Milestone 2: Camera connectivity
 
@@ -60,6 +59,6 @@ Tauri interface: configuration, debug values, manual controls, presets
 ## Decisions already made
 
 - Use a local desktop application, not a browser-hosted website.
-- Use Tauri for a web-style UI packaged as a native desktop executable.
-- Keep hardware/protocol logic in Rust and independent of the UI.
+- Use Python/Tkinter for the usable first version.
+- Keep hardware/protocol logic independent of the UI.
 - Treat macOS hardware testing as the source of truth; Windows initially verifies the UI and simulated behavior.

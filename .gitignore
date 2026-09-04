@@ -6,6 +6,12 @@ target/
 node_modules/
 dist/
 
+# Python environments and packaging output
+.venv/
+build/
+__pycache__/
+*.py[cod]
+
 # Tauri-generated signing keys and local configuration
 *.key
 *.key.pub

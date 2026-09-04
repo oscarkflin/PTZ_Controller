@@ -1,55 +1,56 @@
 # PTZ Controller
 
-Local desktop control for a USB joystick and Sony SRG-300SE PTZ camera.
+A local USB-joystick controller for the Sony SRG-300SE PTZ camera.
 
-PTZ Controller will be a standalone macOS and Windows application. It will connect a Thrustmaster T.16000M FCS joystick to a Sony camera on the local network; it does not require OBS, a cloud account, or an Internet connection during use.
+The first usable version is intentionally simple: a Python desktop application using the standard Tkinter UI toolkit, `pygame` for joystick input, and UDP VISCA-over-IP commands. It needs no OBS, cloud service, or Internet connection during normal operation.
 
-> **Current status:** interactive UI prototype only. It does not yet control a real camera or joystick, and no installable release exists yet.
+## Current MVP
 
-## What the finished app will do
+The Python controller now includes:
 
-- Connect to a Sony SRG-300SE using VISCA over UDP/IP.
-- Use on-screen Pan, Tilt, Zoom, and Stop controls.
-- Read joystick axes and buttons.
-- Provide proportional pan/tilt, variable zoom, dead-zone calibration, and a response curve.
-- Recall camera presets from configurable joystick buttons.
-- Save camera and joystick mapping profiles locally.
-- Stop camera movement when the joystick disconnects, app closes, or input becomes stale.
+- Camera IP and UDP port configuration (`52381` default)
+- Guarded **live command** mode, off by default
+- Manual Pan, Tilt, Zoom, and Stop controls
+- Preset recall buttons
+- USB joystick scanning and live axis monitor
+- Configurable dead zone and throttle-based movement speed
+- Stop command on application close or joystick-control disable
+- VISCA command packet tests
 
-## Planned technology
+> The MVP has not yet been verified against the physical Sony SRG-300SE or T.16000M. Keep live mode off until the manual camera controls have been tested at church.
 
-- **Desktop app:** Tauri 2
-- **User interface:** Vanilla TypeScript, HTML, and CSS
-- **Hardware and camera layer:** Rust
-- **Camera protocol:** Sony VISCA over UDP/IP; default port `52381`, configurable per camera
+## Run it
 
-## Try the UI prototype now
+See [docs/BUILDING.md](docs/BUILDING.md) for the complete Windows and Mac instructions. The short version:
 
-The working interface mock-up is in [`ui-prototype/`](ui-prototype/). It intentionally simulates camera and joystick activity, so it is safe to explore without hardware.
+```bash
+python -m venv .venv
+```
 
-Open [`ui-prototype/index.html`](ui-prototype/index.html) in a browser, or serve that directory locally with a static web server. The production application will package the same interface in a normal desktop window.
+Activate the environment, install dependencies, then start the app:
 
-## Church setup (when the first real release is available)
+```bash
+python -m pip install -r requirements.txt
+python app.py
+```
 
-The concise field checklist is in [docs/CHURCH_SETUP.md](docs/CHURCH_SETUP.md). In short:
+## Church setup
 
-1. Connect the Mac and camera to the same Ethernet network.
-2. Connect the T.16000M to the Mac over USB.
-3. Confirm the camera’s IP address and VISCA-over-IP setting.
-4. Install the Mac `.dmg` from the GitHub **Releases** page.
-5. Test manual on-screen controls before mapping or moving by joystick.
-6. Calibrate and assign joystick controls; then save the profile.
+Follow [docs/CHURCH_SETUP.md](docs/CHURCH_SETUP.md) when testing with the Mac, camera, and joystick.
 
-## Development roadmap
+## Project layout
 
-See [docs/IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md) for the staged technical plan, including the Windows UI prototype, Mac hardware validation, safety controls, and release automation.
+```text
+app.py                 Application launcher
+ptz_controller/        Camera protocol, joystick input, and desktop UI
+tests/                 VISCA packet tests
+requirements.txt       Optional joystick dependency
+ui-prototype/          Earlier browser UI concept
+docs/                  Setup, build, release, and implementation guides
+```
 
-## Releases
+## Future work
 
-When the production Tauri application is ready, GitHub Actions will build Windows and macOS installers from version tags and attach them to GitHub Releases. The release process and macOS signing notes are documented in [docs/RELEASING.md](docs/RELEASING.md).
-
-For local Windows, macOS, and future GitHub Actions build steps, see [docs/BUILDING.md](docs/BUILDING.md).
-
-## Repository
+The next milestone is a real Mac hardware test: manual VISCA commands first, then joystick axis calibration and button mapping. The longer-term UI may still move to Tauri/Rust, but Python is the active path to a usable first controller.
 
 GitHub: <https://github.com/oscarkflin/PTZ_Controller>
