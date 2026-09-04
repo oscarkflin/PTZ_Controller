@@ -48,6 +48,8 @@ See [docs/IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md) for the staged te
 
 When the production Tauri application is ready, GitHub Actions will build Windows and macOS installers from version tags and attach them to GitHub Releases. The release process and macOS signing notes are documented in [docs/RELEASING.md](docs/RELEASING.md).
 
+For local Windows, macOS, and future GitHub Actions build steps, see [docs/BUILDING.md](docs/BUILDING.md).
+
 ## Repository
 
 GitHub: <https://github.com/oscarkflin/PTZ_Controller>
