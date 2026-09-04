@@ -1,35 +1,53 @@
 # PTZ Controller
 
-A local desktop controller for a USB joystick and Sony SRG-300SE PTZ camera.
+Local desktop control for a USB joystick and Sony SRG-300SE PTZ camera.
 
-The application will be built with Tauri: a TypeScript desktop interface backed by Rust for joystick HID input and Sony VISCA-over-IP control. It will run locally on macOS and Windows, without OBS or cloud services.
+PTZ Controller will be a standalone macOS and Windows application. It will connect a Thrustmaster T.16000M FCS joystick to a Sony camera on the local network; it does not require OBS, a cloud account, or an Internet connection during use.
 
-## Status
+> **Current status:** interactive UI prototype only. It does not yet control a real camera or joystick, and no installable release exists yet.
 
-Project foundation. The repository is intentionally prepared before application scaffolding because Rust is not installed on this Windows machine yet.
+## What the finished app will do
 
-## Planned stack
+- Connect to a Sony SRG-300SE using VISCA over UDP/IP.
+- Use on-screen Pan, Tilt, Zoom, and Stop controls.
+- Read joystick axes and buttons.
+- Provide proportional pan/tilt, variable zoom, dead-zone calibration, and a response curve.
+- Recall camera presets from configurable joystick buttons.
+- Save camera and joystick mapping profiles locally.
+- Stop camera movement when the joystick disconnects, app closes, or input becomes stale.
 
-- Desktop shell: Tauri 2
-- Interface: Vanilla TypeScript, HTML, and CSS
-- Controller core: Rust
-- Camera protocol: Sony VISCA over UDP/IP
-- Initial target: Sony SRG-300SE and Thrustmaster T.16000M FCS
+## Planned technology
 
-## Development stages
+- **Desktop app:** Tauri 2
+- **User interface:** Vanilla TypeScript, HTML, and CSS
+- **Hardware and camera layer:** Rust
+- **Camera protocol:** Sony VISCA over UDP/IP; default port `52381`, configurable per camera
 
-1. Create the Tauri app shell and visual controller prototype.
-2. Add a simulated camera and joystick so the UI can be verified on Windows.
-3. Implement VISCA manual pan, tilt, zoom, and stop commands.
-4. Verify camera control on the Mac and Sony SRG-300SE.
-5. Add joystick detection, calibration, mapping, presets, and release automation.
+## Try the UI prototype now
 
-See [the implementation plan](docs/IMPLEMENTATION_PLAN.md) for details.
+The working interface mock-up is in [`ui-prototype/`](ui-prototype/). It intentionally simulates camera and joystick activity, so it is safe to explore without hardware.
 
-## First-time setup
+Open [`ui-prototype/index.html`](ui-prototype/index.html) in a browser, or serve that directory locally with a static web server. The production application will package the same interface in a normal desktop window.
 
-When development begins, install the current Rust toolchain, Node.js LTS, and the Windows C++ Build Tools, then scaffold the Tauri application in this repository. No camera or joystick configuration is required for the first UI prototype.
+## Church setup (when the first real release is available)
+
+The concise field checklist is in [docs/CHURCH_SETUP.md](docs/CHURCH_SETUP.md). In short:
+
+1. Connect the Mac and camera to the same Ethernet network.
+2. Connect the T.16000M to the Mac over USB.
+3. Confirm the camera’s IP address and VISCA-over-IP setting.
+4. Install the Mac `.dmg` from the GitHub **Releases** page.
+5. Test manual on-screen controls before mapping or moving by joystick.
+6. Calibrate and assign joystick controls; then save the profile.
+
+## Development roadmap
+
+See [docs/IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md) for the staged technical plan, including the Windows UI prototype, Mac hardware validation, safety controls, and release automation.
 
 ## Releases
 
-GitHub Actions will eventually build Windows and macOS installers from version tags and attach them to GitHub Releases. macOS code signing and notarization will be added before broad distribution.
+When the production Tauri application is ready, GitHub Actions will build Windows and macOS installers from version tags and attach them to GitHub Releases. The release process and macOS signing notes are documented in [docs/RELEASING.md](docs/RELEASING.md).
+
+## Repository
+
+GitHub: <https://github.com/oscarkflin/PTZ_Controller>
