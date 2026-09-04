@@ -22,6 +22,10 @@ class ViscaPacketTests(unittest.TestCase):
         packet = self.client.recall_preset(3)
         self.assertEqual(packet, bytes.fromhex("01 00 00 07 00 00 00 00 81 01 04 3F 02 03 FF"))
 
+    def test_store_preset_packet(self):
+        packet = self.client.store_preset(3)
+        self.assertEqual(packet, bytes.fromhex("01 00 00 07 00 00 00 00 81 01 04 3F 01 03 FF"))
+
 
 if __name__ == "__main__":
     unittest.main()

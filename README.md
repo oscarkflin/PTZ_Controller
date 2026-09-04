@@ -11,7 +11,7 @@ The Python controller now includes:
 - Camera IP and UDP port configuration (`52381` default)
 - Guarded **live command** mode, off by default
 - Manual Pan, Tilt, Zoom, and Stop controls
-- Preset recall buttons
+- Preset recall buttons and confirmation-protected preset storage
 - USB joystick scanning and live axis monitor
 - Configurable dead zone and throttle-based movement speed
 - Stop command on application close or joystick-control disable

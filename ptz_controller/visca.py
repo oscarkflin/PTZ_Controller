@@ -56,3 +56,8 @@ class ViscaClient:
         if not 0 <= preset <= 15:
             raise ValueError("Preset must be between 0 and 15.")
         return self.send(bytes((0x81, 0x01, 0x04, 0x3F, 0x02, preset, 0xFF)))
+
+    def store_preset(self, preset: int) -> bytes:
+        if not 0 <= preset <= 15:
+            raise ValueError("Preset must be between 0 and 15.")
+        return self.send(bytes((0x81, 0x01, 0x04, 0x3F, 0x01, preset, 0xFF)))

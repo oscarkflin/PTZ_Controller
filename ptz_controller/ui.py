@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import tkinter as tk
-from tkinter import messagebox, ttk
+from tkinter import messagebox, simpledialog, ttk
 
 from .joystick import JoystickReader
 from .visca import ViscaClient
@@ -78,6 +78,7 @@ class PTZControllerApp:
         presets.grid(row=3, column=0, columnspan=4, sticky="ew", pady=(10, 0))
         for preset, name in enumerate(("Pulpit", "Piano", "Worship team", "Wide stage", "Audience"), start=1):
             ttk.Button(presets, text=f"{preset}  {name}", command=lambda value=preset: self.recall(value)).grid(row=0, column=preset - 1, padx=4)
+        ttk.Button(presets, text="Store current position…", command=self.store_preset).grid(row=1, column=0, columnspan=5, pady=(12, 0))
 
         shell.columnconfigure(0, weight=1)
         shell.columnconfigure(1, weight=1)
@@ -121,6 +122,15 @@ class PTZControllerApp:
     def recall(self, preset: int) -> None:
         self._client().recall_preset(preset)
         self.status.set(f"{'LIVE' if self.live_enabled.get() else 'Demo'}: preset {preset}")
+
+    def store_preset(self) -> None:
+        preset = simpledialog.askinteger("Store preset", "Preset number to overwrite (0–15):", parent=self.root, minvalue=0, maxvalue=15)
+        if preset is None:
+            return
+        if not messagebox.askyesno("Confirm preset store", f"Overwrite camera preset {preset} with the current camera position?", parent=self.root):
+            return
+        self._client().store_preset(preset)
+        self.status.set(f"{'LIVE' if self.live_enabled.get() else 'Demo'}: stored preset {preset}")
 
     def scan_joystick(self) -> None:
         if not self.reader.available:
