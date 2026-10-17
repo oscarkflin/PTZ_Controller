@@ -4,6 +4,8 @@ import android.app.*;
 import android.os.Bundle;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.graphics.drawable.GradientDrawable;
+import android.content.res.ColorStateList;
 import android.view.*;
 import android.widget.*;
 import java.net.*;
@@ -22,19 +24,28 @@ public class MainActivity extends Activity {
     private volatile boolean armed = false;
     private int sequence = 0, speed = 6;
     private DatagramSocket socket;
+    private JoystickView joystick;
+    private SeekBar zoomSlider;
+    private TextView motionLabel, zoomLabel;
+    private float joystickX, joystickY;
+    private long lastMoveTime;
+    private String lastMotion = "";
+    private int lastZoom = 0;
 
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
         prefs = getSharedPreferences("controller", MODE_PRIVATE);
         ScrollView scroll = new ScrollView(this);
         root = new LinearLayout(this); root.setOrientation(LinearLayout.VERTICAL);
-        root.setPadding(32, 32, 32, 40); root.setBackgroundColor(Color.rgb(15,23,33));
+        root.setPadding(dp(20), dp(22), dp(20), dp(32)); root.setBackgroundColor(Color.rgb(11,18,28));
+        getWindow().setStatusBarColor(Color.rgb(11,18,28));
+        getWindow().setNavigationBarColor(Color.rgb(11,18,28));
         scroll.addView(root); setContentView(scroll);
-        label("PTZ Controller", 28); label("Android · Sony VISCA over IP", 14);
+        label("◉  PTZ Controller", 28); label("YOUR CAMERA. AT YOUR FINGERTIPS.", 11);
         status = label("Demo mode · no commands sent", 14);
         host = field("Camera IPv4 address", prefs.getString("host", "192.168.1.120"));
         port = field("UDP port", prefs.getString("port", "52381"));
-        live = new Switch(this); live.setText("Enable live camera commands"); root.addView(live);
+        live = new Switch(this); live.setText("Live camera control"); live.setPadding(0,dp(12),0,dp(12)); root.addView(live);
         live.setOnCheckedChangeListener((button, checked) -> {
             if (checked) {
                 if (!validAddress()) { live.setChecked(false); return; }
@@ -45,18 +56,29 @@ public class MainActivity extends Activity {
                     .setOnCancelListener(d -> live.setChecked(false)).show();
             } else { stop(); armed=false; host.setEnabled(true); port.setEnabled(true); }
         });
-        label("Pan & tilt · hold to move", 20);
-        LinearLayout up = row(root); hold(up,"▲",0,1,0);
-        LinearLayout middle = row(root); hold(middle,"◀",-1,0,0); button(middle,"STOP ALL",this::stop); hold(middle,"▶",1,0,0);
-        LinearLayout down = row(root); hold(down,"▼",0,-1,0);
-        label("Maximum speed", 14);
+        label("Move the camera", 22);
+        motionLabel=label("Drag gently for precise movement · release to stop",12);
+        joystick=new JoystickView(this,this::analogMovement);
+        root.addView(joystick,new LinearLayout.LayoutParams(-1,dp(265)));
+        Button stopButton=button(root,"■   STOP ALL",()->{joystick.release();zoomSlider.setProgress(50);stop();});
+        stopButton.setBackground(tint(Color.rgb(92,35,46)));stopButton.setTextColor(Color.rgb(255,192,199));
+        label("Movement speed limit", 14);
         SeekBar slider = new SeekBar(this); slider.setMax(23); slider.setProgress(5); root.addView(slider);
         slider.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener(){
-            public void onProgressChanged(SeekBar s,int n,boolean user){speed=n+1;}
+            public void onProgressChanged(SeekBar s,int n,boolean user){speed=n+1;lastMotion="";analogMovement(joystickX,joystickY);}
             public void onStartTrackingTouch(SeekBar s){} public void onStopTrackingTouch(SeekBar s){}
         });
-        label("Zoom · hold to move",20);
-        LinearLayout zoom = row(root); hold(zoom,"Zoom −",0,0,-1); hold(zoom,"Zoom +",0,0,1);
+        label("Zoom",22);
+        zoomLabel=label("Wide  −                 Release to stop                 +  Tele",12);
+        zoomSlider=new SeekBar(this);zoomSlider.setMax(100);zoomSlider.setProgress(50);root.addView(zoomSlider);
+        zoomSlider.setProgressTintList(ColorStateList.valueOf(Color.rgb(67,166,255)));
+        zoomSlider.setThumbTintList(ColorStateList.valueOf(Color.rgb(112,192,255)));
+        zoomSlider.setOnTouchListener((v,e)->{v.getParent().requestDisallowInterceptTouchEvent(true);if(e.getActionMasked()==MotionEvent.ACTION_CANCEL){zoomSlider.setProgress(50);zoomCommand(50);}return false;});
+        zoomSlider.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener(){
+            public void onProgressChanged(SeekBar s,int n,boolean user){if(user)zoomCommand(n);}
+            public void onStartTrackingTouch(SeekBar s){}
+            public void onStopTrackingTouch(SeekBar s){s.setProgress(50);zoomCommand(50);s.getParent().requestDisallowInterceptTouchEvent(false);}
+        });
         label("Presets",20);
         label("Tap to recall · long press to rename, store or remove",13);
         presets = new LinearLayout(this); presets.setOrientation(LinearLayout.VERTICAL); root.addView(presets);
@@ -71,7 +93,25 @@ public class MainActivity extends Activity {
     private TextView label(String text,int size){TextView t=new TextView(this);t.setText(text);t.setTextSize(size);t.setTextColor(Color.rgb(218,232,247));t.setPadding(0,10,0,10);root.addView(t);return t;}
     private EditText field(String hint,String value){EditText t=new EditText(this);t.setSingleLine(true);t.setHint(hint);t.setText(value);root.addView(t);return t;}
     private LinearLayout row(LinearLayout parent){LinearLayout r=new LinearLayout(this);r.setGravity(Gravity.CENTER);parent.addView(r);return r;}
-    private Button button(LinearLayout parent,String text,Runnable action){Button b=new Button(this);b.setText(text);parent.addView(b);b.setOnClickListener(v->action.run());return b;}
+    private int dp(int n){return Math.round(n*getResources().getDisplayMetrics().density);}
+    private GradientDrawable tint(int color){GradientDrawable d=new GradientDrawable();d.setColor(color);d.setCornerRadius(dp(14));d.setStroke(dp(1),Color.rgb(44,62,83));return d;}
+    private Button button(LinearLayout parent,String text,Runnable action){Button b=new Button(this);b.setText(text);b.setAllCaps(false);b.setTextSize(15);b.setTextColor(Color.rgb(219,235,251));b.setBackground(tint(Color.rgb(24,39,57)));LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(-1,dp(54));lp.setMargins(0,dp(5),0,dp(5));parent.addView(b,lp);b.setOnClickListener(v->action.run());return b;}
+    private void analogMovement(float x,float y){
+        joystickX=x;joystickY=y;
+        float ax=Math.abs(x),ay=Math.abs(y);int pan=ax<.10f?0:x>0?1:-1,tilt=ay<.10f?0:y>0?1:-1;
+        int ps=Math.max(1,Math.round((float)Math.pow(ax,1.6)*speed));
+        int ts=Math.max(1,Math.round((float)Math.pow(ay,1.6)*Math.min(20,speed)));
+        String intent=pan+":"+tilt+":"+ps+":"+ts;long now=android.os.SystemClock.uptimeMillis();
+        if(!intent.equals(lastMotion)&&((pan==0&&tilt==0)||now-lastMoveTime>=50)){
+            send(0x81,1,6,1,ps,ts,pan<0?1:pan>0?2:3,tilt<0?2:tilt>0?1:3,0xff);lastMotion=intent;lastMoveTime=now;
+        }
+        motionLabel.setText(pan==0&&tilt==0?"Centered · camera stopped":"Pan "+(pan==0?0:ps)+"  /  Tilt "+(tilt==0?0:ts)+" · release to stop");
+    }
+    private void zoomCommand(int progress){
+        int delta=progress-50;int command=Math.abs(delta)<5?0:(delta>0?0x20:0x30)+Math.min(7,Math.round(Math.abs(delta)*7/50f));
+        if(command!=lastZoom){send(0x81,1,4,7,command,0xff);lastZoom=command;}
+        zoomLabel.setText(command==0?"Wide  −                 Centered · stopped                 +  Tele":(delta>0?"Zooming in":"Zooming out")+" · release to stop");
+    }
     private void hold(LinearLayout parent,String text,int pan,int tilt,int zoom){
         Button b=button(parent,text,()->{});
         b.setOnTouchListener((v,event)->{
@@ -122,6 +162,6 @@ public class MainActivity extends Activity {
             prefs.edit().putString("preset"+n,label).apply();renderPresets();dialog.dismiss();
         }catch(Exception e){name.setError("Use an unused slot 0–15 and a name");}}));dialog.show();
     }
-    @Override protected void onPause(){stop();armed=false;if(live!=null)live.setChecked(false);super.onPause();}
+    @Override protected void onPause(){if(joystick!=null)joystick.release();if(zoomSlider!=null){zoomSlider.setProgress(50);zoomCommand(50);}stop();armed=false;if(live!=null)live.setChecked(false);super.onPause();}
     @Override protected void onDestroy(){network.execute(()->{if(socket!=null)socket.close();});network.shutdown();super.onDestroy();}
 }

@@ -7,7 +7,9 @@ The Android app connects straight to the Sony SRG-300SE over Wi-Fi using UDP VIS
 - Android 8.0 or newer
 - Editable camera IPv4 address and UDP port (default 52381)
 - Demo mode at startup; explicitly enable live commands
-- Hold Pan/Tilt/Zoom buttons to move, release to send Stop
+- Drag the virtual joystick for proportional pan/tilt, including diagonal movement; release to stop pan/tilt
+- Use the movement speed slider to limit the joystick's maximum speed
+- Slide zoom left for wide or right for tele; distance from center sets speed; release returns to center and stops zoom
 - Stop All sends both pan/tilt and zoom stop
 - Leaving the app disables live mode and attempts to stop the camera
 - Preset recall; long-press a preset to rename, store position, or remove its local button
