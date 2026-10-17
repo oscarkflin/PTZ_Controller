@@ -12,6 +12,11 @@ build/
 __pycache__/
 *.py[cod]
 
+# Android local configuration and generated files
+android/.gradle/
+android/**/build/
+android/local.properties
+
 # Tauri-generated signing keys and local configuration
 *.key
 *.key.pub

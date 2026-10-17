@@ -1,5 +1,9 @@
 # PTZ Controller
 
+## Android phone testing
+
+A native Android test app is now in [`android/`](android/). It controls the camera directly over Wi-Fi, so no computer or website host is needed at church. See [Android installation and testing instructions](docs/ANDROID.md) for the APK download, phone setup, controls, and build steps. USB joystick support is not included in the initial Android app.
+
 A local USB-joystick controller for the Sony SRG-300SE PTZ camera.
 
 The first usable version is intentionally simple: a Python desktop application using the standard Tkinter UI toolkit, `pygame` for joystick input, and UDP VISCA-over-IP commands. It needs no OBS, cloud service, or Internet connection during normal operation.
