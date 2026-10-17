@@ -5,7 +5,6 @@ import android.os.Bundle;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
-import android.content.res.ColorStateList;
 import android.view.*;
 import android.widget.*;
 import java.net.*;
@@ -25,12 +24,10 @@ public class MainActivity extends Activity {
     private int sequence = 0, speed = 6;
     private DatagramSocket socket;
     private JoystickView joystick;
-    private SeekBar zoomSlider;
     private TextView motionLabel, zoomLabel;
     private float joystickX, joystickY;
     private long lastMoveTime;
     private String lastMotion = "";
-    private int lastZoom = 0;
 
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
@@ -60,7 +57,7 @@ public class MainActivity extends Activity {
         motionLabel=label("Drag gently for precise movement · release to stop",12);
         joystick=new JoystickView(this,this::analogMovement);
         root.addView(joystick,new LinearLayout.LayoutParams(-1,dp(265)));
-        Button stopButton=button(root,"■   STOP ALL",()->{joystick.release();zoomSlider.setProgress(50);stop();});
+        Button stopButton=button(root,"■   STOP ALL",()->{joystick.release();stop();});
         stopButton.setBackground(tint(Color.rgb(92,35,46)));stopButton.setTextColor(Color.rgb(255,192,199));
         label("Movement speed limit", 14);
         SeekBar slider = new SeekBar(this); slider.setMax(23); slider.setProgress(5); root.addView(slider);
@@ -69,16 +66,10 @@ public class MainActivity extends Activity {
             public void onStartTrackingTouch(SeekBar s){} public void onStopTrackingTouch(SeekBar s){}
         });
         label("Zoom",22);
-        zoomLabel=label("Wide  −                 Release to stop                 +  Tele",12);
-        zoomSlider=new SeekBar(this);zoomSlider.setMax(100);zoomSlider.setProgress(50);root.addView(zoomSlider);
-        zoomSlider.setProgressTintList(ColorStateList.valueOf(Color.rgb(67,166,255)));
-        zoomSlider.setThumbTintList(ColorStateList.valueOf(Color.rgb(112,192,255)));
-        zoomSlider.setOnTouchListener((v,e)->{v.getParent().requestDisallowInterceptTouchEvent(true);if(e.getActionMasked()==MotionEvent.ACTION_CANCEL){zoomSlider.setProgress(50);zoomCommand(50);}return false;});
-        zoomSlider.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener(){
-            public void onProgressChanged(SeekBar s,int n,boolean user){if(user)zoomCommand(n);}
-            public void onStartTrackingTouch(SeekBar s){}
-            public void onStopTrackingTouch(SeekBar s){s.setProgress(50);zoomCommand(50);s.getParent().requestDisallowInterceptTouchEvent(false);}
-        });
+        zoomLabel=label("Hold to zoom · release to stop",12);
+        LinearLayout zoomRow=row(root);
+        zoomButton(zoomRow,"−  Zoom out",-1);
+        zoomButton(zoomRow,"+  Zoom in",1);
         label("Presets",20);
         label("Tap to recall · long press to rename, store or remove",13);
         presets = new LinearLayout(this); presets.setOrientation(LinearLayout.VERTICAL); root.addView(presets);
@@ -107,10 +98,22 @@ public class MainActivity extends Activity {
         }
         motionLabel.setText(pan==0&&tilt==0?"Centered · camera stopped":"Pan "+(pan==0?0:ps)+"  /  Tilt "+(tilt==0?0:ts)+" · release to stop");
     }
-    private void zoomCommand(int progress){
-        int delta=progress-50;int command=Math.abs(delta)<5?0:(delta>0?0x20:0x30)+Math.min(7,Math.round(Math.abs(delta)*7/50f));
-        if(command!=lastZoom){send(0x81,1,4,7,command,0xff);lastZoom=command;}
-        zoomLabel.setText(command==0?"Wide  −                 Centered · stopped                 +  Tele":(delta>0?"Zooming in":"Zooming out")+" · release to stop");
+    private void zoomButton(LinearLayout parent,String text,int direction){
+        Button b=button(parent,text,()->{});
+        LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(0,dp(64),1);lp.setMargins(dp(4),dp(5),dp(4),dp(5));b.setLayoutParams(lp);
+        b.setOnTouchListener((v,e)->{
+            int action=e.getActionMasked();
+            if(action==MotionEvent.ACTION_DOWN){
+                v.getParent().requestDisallowInterceptTouchEvent(true);v.setPressed(true);
+                send(0x81,1,4,7,direction>0?0x24:0x34,0xff);
+                zoomLabel.setText(direction>0?"Zooming in · release to stop":"Zooming out · release to stop");return true;
+            }
+            if(action==MotionEvent.ACTION_UP||action==MotionEvent.ACTION_CANCEL){
+                v.setPressed(false);send(0x81,1,4,7,0,0xff);zoomLabel.setText("Hold to zoom · release to stop");
+                v.getParent().requestDisallowInterceptTouchEvent(false);if(action==MotionEvent.ACTION_UP)v.performClick();return true;
+            }
+            return true;
+        });
     }
     private void hold(LinearLayout parent,String text,int pan,int tilt,int zoom){
         Button b=button(parent,text,()->{});
@@ -125,7 +128,7 @@ public class MainActivity extends Activity {
     }
     private void saveAddress(){prefs.edit().putString("host",host.getText().toString().trim()).putString("port",port.getText().toString()).apply();}
     private void movement(int pan,int tilt){send(0x81,1,6,1,speed,Math.min(speed,20),pan<0?1:pan>0?2:3,tilt<0?2:tilt>0?1:3,0xff);}
-    private void stop(){movement(0,0);send(0x81,1,4,7,0,0xff);}
+    private void stop(){movement(0,0);send(0x81,1,4,7,0,0xff);if(zoomLabel!=null)zoomLabel.setText("Hold to zoom · release to stop");}
     private void send(int... bytes){
         if(!armed){status.setText("Demo command · no network traffic");return;}
         final String address=host.getText().toString().trim(); final int destination=Integer.parseInt(port.getText().toString());
@@ -162,6 +165,6 @@ public class MainActivity extends Activity {
             prefs.edit().putString("preset"+n,label).apply();renderPresets();dialog.dismiss();
         }catch(Exception e){name.setError("Use an unused slot 0–15 and a name");}}));dialog.show();
     }
-    @Override protected void onPause(){if(joystick!=null)joystick.release();if(zoomSlider!=null){zoomSlider.setProgress(50);zoomCommand(50);}stop();armed=false;if(live!=null)live.setChecked(false);super.onPause();}
+    @Override protected void onPause(){if(joystick!=null)joystick.release();stop();armed=false;if(live!=null)live.setChecked(false);super.onPause();}
     @Override protected void onDestroy(){network.execute(()->{if(socket!=null)socket.close();});network.shutdown();super.onDestroy();}
 }
