@@ -1,0 +1,6 @@
+{
+  "mode": "demo",
+  "host": "",
+  "port": 52381,
+  "framing": "sony"
+}

@@ -1,0 +1,9 @@
+__pycache__/
+*.py[cod]
+.DS_Store
+camera.json
+camera.tmp
+preset-names.json
+preset-names.tmp
+*.log
+.venv/
